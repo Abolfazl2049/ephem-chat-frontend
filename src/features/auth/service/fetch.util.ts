@@ -1,7 +1,6 @@
 import { $fetch } from "ofetch";
 import { API_BASE_URL } from "../shared/service/constants";
-
-export interface Session {
+interface Session {
   id: string;
   expiresAt: string;
   user: string;
@@ -9,19 +8,18 @@ export interface Session {
   updatedAt: string;
   createdAt: string;
 }
-
-export interface SessionResponse {
+interface CreateSessionRes {
   message: string;
   data: {
     session: Session;
   };
 }
 
-export const createSession = async (name: string): Promise<SessionResponse> => {
-  const data = await $fetch<SessionResponse>(`${API_BASE_URL}/session/create`, {
+const fetchCreateSession = async (name: string): Promise<CreateSessionRes> => {
+  return await $fetch<CreateSessionRes>(`${API_BASE_URL}/session/create`, {
     method: "POST",
     body: { name },
   });
-
-  return data;
 };
+export type { Session, CreateSessionRes };
+export { fetchCreateSession };

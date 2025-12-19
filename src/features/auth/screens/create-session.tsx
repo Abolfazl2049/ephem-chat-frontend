@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createSession } from "../service/fetch.util";
+import { fetchCreateSession } from "../service/fetch.util";
 import SessionForm from "../components/session-form";
 import SessionFormResult from "../components/session-form-result";
 import { useRouter } from "next/navigation";
@@ -26,7 +26,7 @@ export default function CreateSession() {
     setError("");
 
     try {
-      const data = await createSession(name);
+      const data = await fetchCreateSession(name);
       setToken(data.data.session.token);
       setStep("token");
     } catch (err) {
@@ -39,11 +39,10 @@ export default function CreateSession() {
   const handleSaveToken = async () => {
     try {
       const storage = persistToken ? localStorage : sessionStorage;
-      storage.setItem("session-token", token);
+      storage.setItem("token", token);
 
-      cookieStore.set("session-token", token).then((res) => {
-        router.replace("/");
-      });
+      await cookieStore.set("token", token);
+      router.replace("/");
     } catch (err) {
       setError("Failed to save token");
     }

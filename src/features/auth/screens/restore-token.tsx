@@ -28,7 +28,7 @@ export default function RestoreTokenScreen() {
 
     try {
       // Store the token
-      sessionStorage.setItem("session-token", token);
+      sessionStorage.setItem("token", token);
 
       // Redirect to home
       router.replace("/");
