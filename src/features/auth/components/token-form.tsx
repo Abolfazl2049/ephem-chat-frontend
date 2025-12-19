@@ -6,44 +6,47 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-interface SessionStepOneFormProps {
-  name: string;
-  setName: (value: string) => void;
-  nameError: boolean;
+interface TokenFormProps {
+  token: string;
+  setToken: (value: string) => void;
+  tokenError: boolean;
   loading: boolean;
   error: string;
   onSubmit: (e: React.FormEvent) => void;
 }
 
-export default function SessionForm({ name, setName, nameError, loading, error, onSubmit }: SessionStepOneFormProps) {
+export default function TokenForm({
+  token,
+  setToken,
+  tokenError,
+  loading,
+  error,
+  onSubmit,
+}: TokenFormProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-950 px-4 py-8">
       <div className="w-full max-w-md space-y-6">
         {/* Header */}
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-neutral-100">EphemChat</h1>
-          <p className="mt-1 text-sm text-neutral-500">Anonymous Chat</p>
+          <p className="mt-1 text-sm text-neutral-500">Restore Your Session</p>
         </div>
 
-        {/* Create Session Form */}
+        {/* Token Form */}
         <form onSubmit={onSubmit} className="space-y-4">
-          {/* Name Input */}
+          {/* Token Input */}
           <div className="space-y-2">
-            <Label htmlFor="name">Display Name</Label>
+            <Label htmlFor="token">Session Token</Label>
             <Input
-              id="name"
+              id="token"
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
-              maxLength={17}
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              placeholder="Paste your saved token"
               autoFocus
-              className={nameError ? "border-red-800 bg-red-950 focus:border-red-700" : ""}
+              className={tokenError ? "border-red-800 bg-red-950 focus:border-red-700" : ""}
             />
-            <div className="flex justify-between text-xs text-neutral-500">
-              <span>{nameError ? "Name must be 3-17 characters" : "3 to 17 characters"}</span>
-              <span>{name.length}/17</span>
-            </div>
+            {tokenError && <p className="text-xs text-red-400">Invalid token format</p>}
           </div>
 
           {/* Error Display */}
@@ -56,39 +59,37 @@ export default function SessionForm({ name, setName, nameError, loading, error, 
           {/* Submit Button */}
           <Button
             type="submit"
-            disabled={nameError || !name || loading}
+            disabled={tokenError || !token || loading}
             className="w-full"
             variant={error ? "destructive" : "default"}>
-            {loading ? "Creating Session..." : "Create Session"}
+            {loading ? "Restoring Session..." : "Restore Session"}
           </Button>
         </form>
 
         {/* Info Box */}
         <div className="space-y-2 rounded border border-neutral-800 bg-neutral-900 px-4 py-3">
-          <p className="text-xs font-medium tracking-wide text-neutral-400 uppercase">How it works</p>
+          <p className="text-xs font-medium tracking-wide text-neutral-400 uppercase">About Tokens</p>
           <ul className="space-y-2 text-xs text-neutral-500">
             <li className="flex gap-2">
               <span className="text-neutral-600">→</span>
-              <span>Create a session with your name</span>
+              <span>Your token gives you access to your session</span>
             </li>
             <li className="flex gap-2">
               <span className="text-neutral-600">→</span>
-              <span>Save your token to access later</span>
+              <span>Keep it safe and secure</span>
             </li>
             <li className="flex gap-2">
               <span className="text-neutral-600">→</span>
-              <span>Start chatting anonymously</span>
+              <span>Sessions expire automatically</span>
             </li>
           </ul>
         </div>
 
-        {/* Footer with Link to Token Submission */}
+        {/* Footer with Link */}
         <div className="space-y-3 text-center">
           <p className="text-xs text-neutral-600">Your data is ephemeral. Chats are temporary.</p>
-          <Link
-            href="/auth/restore-token"
-            className="inline-block text-xs text-neutral-400 underline underline-offset-2 transition-colors hover:text-neutral-300">
-            Have a saved token? Restore it here
+          <Link href="/auth/create-session" className="inline-block text-xs text-neutral-400 hover:text-neutral-300 underline underline-offset-2 transition-colors">
+            Create a new session instead
           </Link>
         </div>
       </div>
