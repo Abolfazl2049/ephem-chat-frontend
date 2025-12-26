@@ -1,6 +1,6 @@
 "use client";
-import { getUserToken } from "@/features/auth/service/utils";
-import { API_BASE_URL } from "@/features/auth/shared/service/constants";
+import { getUserToken } from "@/features/auth";
+import { API_BASE_URL } from "@/features/shared";
 import { $fetch } from "ofetch";
 
 const parseApiResMessage = (data: any) => {

@@ -1,10 +1,7 @@
 "use client";
 
-import AppNavbar from "@/components/layout/app-navbar";
-import AppSidebar from "@/components/layout/app-sidebar";
-import SearchTrigger from "@/features/matching/components/search-triggert";
-import HomeUuidInput from "@/features/enclave/components/home-uuid-input";
-import HomeLink from "@/features/enclave/components/home-link";
+import { MatchingTrigger } from "@/features/matching";
+import { EnclaveUuidInput, MyEnclavesLink } from "@/features/enclave";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -25,7 +22,7 @@ export default function Home() {
             <p className="text-zinc-400">Connect with others in your secure space</p>
           </div>
 
-          <SearchTrigger />
+          <MatchingTrigger />
         </div>
 
         {/* Divider */}
@@ -40,11 +37,11 @@ export default function Home() {
 
         {/* UUID Input Section */}
         <div className="space-y-4">
-          <HomeUuidInput onSubmit={handleUuidSubmit} />
+          <EnclaveUuidInput onSubmit={handleUuidSubmit} />
         </div>
 
         {/* My Enclaves Link */}
-        <HomeLink />
+        <MyEnclavesLink />
       </div>
     </div>
   );

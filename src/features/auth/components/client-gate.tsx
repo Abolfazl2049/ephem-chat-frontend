@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { clearUserToken, getUserToken } from "../service/utils";
 import { useRouter } from "next/navigation";
 import { fetchUserProfile } from "../service/fetch.util";
-import { useMyUser } from "@/features/user/service/store";
+import { useMyUser } from "@/features/user";
 
 export default function ClientGate({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);

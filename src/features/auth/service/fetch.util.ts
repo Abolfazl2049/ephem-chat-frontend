@@ -1,5 +1,5 @@
 import { $fetch } from "ofetch";
-import { API_BASE_URL } from "../shared/service/constants";
+import { API_BASE_URL } from "../../shared/service/constants";
 import { $$fetch } from "@/libs/ofetch";
 interface Session {
   id: string;

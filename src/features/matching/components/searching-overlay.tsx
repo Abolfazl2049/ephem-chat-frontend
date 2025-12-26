@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { startMatchingSocket } from "../service/socket";
-import { useMyUser } from "@/features/user/service/store";
+import { useMyUser } from "@/features/user";
 import { useRouter } from "next/navigation";
 
 type SearchStatus = "connecting" | "searching" | "match_found" | "error";

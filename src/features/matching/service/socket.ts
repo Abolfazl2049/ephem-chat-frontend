@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "@/features/auth/shared/service/constants";
+import { API_BASE_URL } from "@/features/shared";
 import { io } from "socket.io-client";
 
 type MatchingSocketListener = {
