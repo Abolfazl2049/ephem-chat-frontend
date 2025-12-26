@@ -11,6 +11,7 @@ const eslintConfig = defineConfig([
         "error",
         {
           ignoreRestArgs: true,
+          fixToUnknown: true,
         },
       ],
     },

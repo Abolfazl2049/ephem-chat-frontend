@@ -4,19 +4,20 @@ import { useEffect, useState } from "react";
 import { clearUserToken, getUserToken } from "../service/utils";
 import { useRouter } from "next/navigation";
 import { fetchUserProfile } from "../service/fetch.util";
+import { useMyUser } from "@/features/user/service/store";
 
 export default function ClientGate({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const router = useRouter();
+  const setUser = useMyUser((state) => state.setUser);
 
   useEffect(() => {
     async function init() {
       try {
-        let profile: null | Record<string, null> = null;
-
+        let profile: null | Record<string, any> = null;
         if (getUserToken()) {
           profile = await fetchUserProfile();
-          console.log("profile", profile);
+          if (profile) setUser(profile);
         } else {
           router.replace("/auth/create-session");
         }
