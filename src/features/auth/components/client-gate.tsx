@@ -36,5 +36,5 @@ export default function ClientGate({ children }: { children: React.ReactNode }) 
     return null;
   }
 
-  return <div>sss{children}</div>;
+  return <div>{children}</div>;
 }
