@@ -15,14 +15,7 @@ interface TokenFormProps {
   onSubmit: (e: React.FormEvent) => void;
 }
 
-export default function TokenForm({
-  token,
-  setToken,
-  tokenError,
-  loading,
-  error,
-  onSubmit,
-}: TokenFormProps) {
+export default function TokenForm({ token, setToken, tokenError, loading, error, onSubmit }: TokenFormProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-950 px-4 py-8">
       <div className="w-full max-w-md space-y-6">
@@ -44,7 +37,6 @@ export default function TokenForm({
               onChange={(e) => setToken(e.target.value)}
               placeholder="Paste your saved token"
               autoFocus
-              className={tokenError ? "border-red-800 bg-red-950 focus:border-red-700" : ""}
             />
             {tokenError && <p className="text-xs text-red-400">Invalid token format</p>}
           </div>
@@ -88,7 +80,9 @@ export default function TokenForm({
         {/* Footer with Link */}
         <div className="space-y-3 text-center">
           <p className="text-xs text-neutral-600">Your data is ephemeral. Chats are temporary.</p>
-          <Link href="/auth/create-session" className="inline-block text-xs text-neutral-400 hover:text-neutral-300 underline underline-offset-2 transition-colors">
+          <Link
+            href="/auth/create-session"
+            className="inline-block text-xs text-neutral-400 underline underline-offset-2 transition-colors hover:text-neutral-300">
             Create a new session instead
           </Link>
         </div>
