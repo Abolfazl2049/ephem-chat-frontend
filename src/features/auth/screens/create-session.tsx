@@ -5,6 +5,7 @@ import { fetchCreateSession } from "../service/fetch.util";
 import SessionForm from "../components/session-form";
 import SessionFormResult from "../components/session-form-result";
 import { useRouter } from "next/navigation";
+import { reInitFetch } from "@/libs/ofetch";
 
 export default function CreateSession() {
   const [step, setStep] = useState<"input" | "token">("input");
@@ -40,8 +41,9 @@ export default function CreateSession() {
     try {
       const storage = persistToken ? localStorage : sessionStorage;
       storage.setItem("token", token);
+      reInitFetch();
+      console.log(storage.getItem("token"));
 
-      await cookieStore.set("token", token);
       router.replace("/");
     } catch (err) {
       setError("Failed to save token");

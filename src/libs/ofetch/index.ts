@@ -1,5 +1,6 @@
+"use client";
+import { getUserToken } from "@/features/auth/service/utils";
 import { API_BASE_URL } from "@/features/auth/shared/service/constants";
-import { getToken } from "@/features/auth/shared/service/utils/auth";
 import { $fetch } from "ofetch";
 
 const parseApiResMessage = (data: any) => {
@@ -10,6 +11,7 @@ const parseApiResMessage = (data: any) => {
   else if (typeof data === "string" && data.length < 64) return data;
   else return "Error try again";
 };
+
 const onResponseError = (err: any) => {
   const { _data: resData, status } = err.response;
 
@@ -30,16 +32,16 @@ const addErrToast = (message: string | null = null) => {};
 const onRequestError = () => {
   addErrToast();
 };
-const getHeaders = async (options: { withToken?: boolean } = { withToken: true }): Promise<HeadersInit> => {
-  const token = await getToken();
-  if (token?.value)
+const getHeaders = (options: { withToken?: boolean } = { withToken: true }): HeadersInit => {
+  const token = getUserToken();
+  if (token)
     return {
-      Authorization: token?.value,
+      Authorization: token,
     };
   else return {};
 };
-// console.log("getting token");
-// const headers = await getHeaders();
+
+const headers = getHeaders();
 let $$fetch: typeof $fetch = $fetch.create({
   baseURL: API_BASE_URL,
   onResponseError,
@@ -47,10 +49,11 @@ let $$fetch: typeof $fetch = $fetch.create({
   retry: 0,
   timeout: 30000,
   retryStatusCodes: [],
+  headers,
 });
 
-async function reInitFetch() {
-  const headers = await getHeaders();
+function reInitFetch() {
+  const headers = getHeaders();
   $$fetch = $fetch.create({
     headers,
     baseURL: API_BASE_URL,

@@ -1,5 +1,6 @@
 import { $fetch } from "ofetch";
 import { API_BASE_URL } from "../shared/service/constants";
+import { $$fetch } from "@/libs/ofetch";
 interface Session {
   id: string;
   expiresAt: string;
@@ -21,5 +22,8 @@ const fetchCreateSession = async (name: string): Promise<CreateSessionRes> => {
     body: { name },
   });
 };
+const fetchUserProfile = () => {
+  return $$fetch("/user/me", {});
+};
 export type { Session, CreateSessionRes };
-export { fetchCreateSession };
+export { fetchCreateSession, fetchUserProfile };

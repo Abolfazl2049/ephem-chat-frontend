@@ -3,6 +3,7 @@
 import { useState } from "react";
 import TokenForm from "../components/token-form";
 import { useRouter } from "next/navigation";
+import { reInitFetch } from "@/libs/ofetch";
 
 // Token format validation - adjust regex based on your token format
 const TOKEN_REGEX = /^[a-zA-Z0-9_-]+$/;
@@ -29,7 +30,7 @@ export default function RestoreTokenScreen() {
     try {
       // Store the token
       sessionStorage.setItem("token", token);
-
+      reInitFetch();
       // Redirect to home
       router.replace("/");
     } catch (err) {
