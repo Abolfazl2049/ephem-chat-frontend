@@ -19,7 +19,7 @@ export default function RootLayout({
       <div className="flex flex-1 overflow-hidden">
         <AppSidebar />
         <main className="flex-1 overflow-auto">
-          <ClientGate>{children}</ClientGate>;
+          <ClientGate>{children}</ClientGate>
         </main>
       </div>
     </div>
