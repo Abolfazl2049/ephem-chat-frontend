@@ -7,10 +7,9 @@ import { fetchUserProfile } from "../service/fetch.util";
 import { useMyUser } from "@/features/user";
 
 export default function ClientGate({ children }: { children: React.ReactNode }) {
-  const [ready, setReady] = useState(false);
   const router = useRouter();
   const setUser = useMyUser((state) => state.setUser);
-
+  const setIsLogin = useMyUser((state) => state.setIsLogin);
   useEffect(() => {
     async function init() {
       try {
@@ -18,11 +17,10 @@ export default function ClientGate({ children }: { children: React.ReactNode }) 
         if (getUserToken()) {
           profile = await fetchUserProfile();
           if (profile) setUser(profile);
+          setIsLogin(true);
         } else {
           router.replace("/auth/create-session");
         }
-
-        setReady(true);
       } catch (err) {
         clearUserToken();
         router.replace("/auth/create-session");
@@ -32,8 +30,5 @@ export default function ClientGate({ children }: { children: React.ReactNode }) 
     init();
   }, [router, setUser]);
 
-  if (!ready) {
-    return null;
-  }
   return <div>{children}</div>;
 }

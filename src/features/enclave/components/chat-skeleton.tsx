@@ -1,6 +1,6 @@
 export default function EnclaveChatSkeleton() {
   return (
-    <div className="flex h-[100svg-64px] flex-col bg-black">
+    <div className="flex h-[calc(100vh-64px)] flex-col bg-black">
       {/* Skeleton Header */}
       <div className="border-b border-zinc-800 bg-zinc-950/50 px-6 py-4">
         <div className="h-6 w-32 animate-pulse rounded-lg bg-zinc-800" />
