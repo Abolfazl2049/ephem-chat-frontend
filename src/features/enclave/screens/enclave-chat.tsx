@@ -9,6 +9,7 @@ import ChatInput from "../components/chat-input";
 import EnclaveChatSkeleton from "../components/chat-skeleton";
 import { useMyUser } from "@/features/user";
 import { DataTemplate } from "@/features/shared";
+import { EnclaveRtcConnectionHandler } from "../service/rtc.model";
 
 export default function EnclaveChatScreen() {
   const params = useParams();
@@ -17,7 +18,8 @@ export default function EnclaveChatScreen() {
   const [isFetched, setIsFetched] = useState(false);
   const [dispatches, setDispatches] = useState<Dispatch[]>([]);
   const isLogin = useMyUser((state) => state.isLogin);
-
+  const user = useMyUser((state) => state.data);
+  const [rtcHandler, setRtcHandler] = useState<EnclaveRtcConnectionHandler>();
   const handleDispatchSent = async (dispatch: Dispatch) => {
     // Reload dispatches after sending
     try {
@@ -40,8 +42,11 @@ export default function EnclaveChatScreen() {
         .finally(() => {
           setIsFetched(true);
         });
+
+      // rtc
+      if (user) setRtcHandler(new EnclaveRtcConnectionHandler({ enclaveId: id, userId: user.id }));
     }
-  }, [isLogin, id]);
+  }, [isLogin, id, setRtcHandler]);
 
   return (
     <DataTemplate
