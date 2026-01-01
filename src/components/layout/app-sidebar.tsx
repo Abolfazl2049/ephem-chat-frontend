@@ -1,3 +1,4 @@
+import { MyEnclavesSidebar } from "@/features/enclave";
 import { UserSidebarActions } from "@/features/user";
 
 export default function AppSidebar() {
@@ -6,6 +7,7 @@ export default function AppSidebar() {
       <div className="space-y-6">
         <UserSidebarActions />
       </div>
+      <MyEnclavesSidebar />
     </aside>
   );
 }

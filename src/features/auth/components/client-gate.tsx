@@ -30,11 +30,10 @@ export default function ClientGate({ children }: { children: React.ReactNode }) 
     }
 
     init();
-  }, [router]);
+  }, [router, setUser]);
 
   if (!ready) {
     return null;
   }
-
   return <div>{children}</div>;
 }

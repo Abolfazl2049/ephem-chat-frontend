@@ -7,40 +7,17 @@ import { Dispatch, Enclave } from "../service/model";
 import DispatchBox from "../components/dispatch-box";
 import ChatInput from "../components/chat-input";
 import EnclaveChatSkeleton from "../components/chat-skeleton";
+import MyEnclavesSidebar from "../components/my-enclaves-sidebar";
 
 export default function EnclaveChatScreen() {
   const params = useParams();
   const id = params.id as string;
   const [enclave, setEnclave] = useState<Enclave | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isFetched, setIsFetched] = useState(false);
   const hasInitiated = useRef(false);
   const [dispatches, setDispatches] = useState<Dispatch[]>([]);
 
-  useEffect(() => {
-    if (hasInitiated.current) return;
-    hasInitiated.current = true;
-
-    const loadEnclaveData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const [enclaveRes, dispatchesRes] = await Promise.all([fetchEnclaveData(id), fetchEnclaveDispatches(id)]);
-        setEnclave(new Enclave(enclaveRes.data));
-        const parsedDispatches = dispatchesRes.rows.map((d) => new Dispatch(d));
-        setDispatches(parsedDispatches);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load enclave data");
-        console.error("Error loading enclave data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      loadEnclaveData();
-    }
-  }, [id]);
+  const loadEnclaveData = async () => {};
 
   const handleDispatchSent = async (dispatch: Dispatch) => {
     // Reload dispatches after sending
@@ -52,20 +29,36 @@ export default function EnclaveChatScreen() {
       console.error("Error reloading dispatches:", err);
     }
   };
+  useEffect(() => {
+    console.log("effect");
+    if (!hasInitiated.current && id) {
+      hasInitiated.current = true;
+      Promise.all([fetchEnclaveData(id), fetchEnclaveDispatches(id)])
+        .then(([enclaveRes, dispatchesRes]) => {
+          setEnclave(new Enclave(enclaveRes.data));
+          const parsedDispatches = dispatchesRes.rows.map((d) => new Dispatch(d));
+          setDispatches(parsedDispatches);
+        })
+        .finally(() => {
+          setIsFetched(true);
+        });
+    }
+  }, []);
 
-  if (loading) {
+  return <MyEnclavesSidebar />;
+  if (!isFetched) {
     return <EnclaveChatSkeleton />;
   }
 
-  if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-black">
-        <div className="space-y-4 text-center">
-          <p className="text-red-400">{error}</p>
-        </div>
-      </div>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <div className="flex min-h-screen items-center justify-center bg-black">
+  //       <div className="space-y-4 text-center">
+  //         <p className="text-red-400">{error}</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   if (!enclave) {
     return (
