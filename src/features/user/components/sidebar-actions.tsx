@@ -8,10 +8,12 @@ import { DataTemplate } from "@/features/shared";
 export default function SidebarActions() {
   const router = useRouter();
   const user = useMyUser((state) => state.data);
+  const onLogout = useMyUser((state) => state.onLogout);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     sessionStorage.removeItem("token");
+    onLogout();
     router.replace("/auth/create-session");
   };
 

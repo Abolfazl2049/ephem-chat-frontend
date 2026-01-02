@@ -1,7 +1,7 @@
 import { io } from "socket.io-client";
 import { EnclaveParticipant } from "./particpant.model";
 import { API_BASE_URL } from "@/features/shared";
-import { Enclave, EnclaveLog } from "./model";
+import { Dispatch, Enclave, EnclaveLog } from "./model";
 
 class EnclaveRtcConnectionHandler {
   socket: ReturnType<typeof io>;
@@ -10,21 +10,24 @@ class EnclaveRtcConnectionHandler {
   userId: string;
   addLog: (log: EnclaveLog) => void;
   myUserId: string;
-
+  onDispatchReceive: (dispatch: Dispatch) => void;
   constructor({
     enclaveId,
     userId,
     addLog,
     myUserId,
+    onDispatchReceive,
   }: {
     enclaveId: string;
     userId: string;
     addLog: (log: EnclaveLog) => void;
     myUserId: string;
+    onDispatchReceive: (dispatch: Dispatch) => void;
   }) {
     this.enclaveId = enclaveId;
     this.userId = userId;
     this.myUserId = myUserId;
+    this.onDispatchReceive = onDispatchReceive;
     this.socket = io(`${API_BASE_URL}/signaling`, {
       auth: {
         userId,
@@ -52,11 +55,24 @@ class EnclaveRtcConnectionHandler {
     this.socket.on("candidate", (data) => this.onCandidate(data));
     this.socket.on("left", (data) => this.onLeft(data));
     this.socket.onAny((ev, data) => {
-      console.log("received", ev, "data:", data);
+      console.info("received", ev, "data:", data);
     });
     this.socket.onAnyOutgoing((ev, data) => {
-      console.log("sending", ev, "data", data);
+      console.info("sending", ev, "data", data);
     });
+  }
+
+  initParticipantDataChannel(participant: EnclaveParticipant) {
+    if (!participant.dataChannel) {
+      console.warn("no data channel to init");
+      return;
+    }
+    participant.dataChannel.onopen = () => console.log(`Data channel open for ${participant.userId}`);
+    participant.dataChannel.onmessage = (event) => {
+      const parsed = JSON.parse(event.data);
+      if (parsed.type === "dispatch") this.onDispatchReceive(parsed.data);
+    };
+    participant.dataChannel.onclose = () => console.log(`Data channel closed for ${participant.userId}`);
   }
 
   initParticipant = ({ userId, userName }: { userId: string; userName?: string }) => {
@@ -65,12 +81,9 @@ class EnclaveRtcConnectionHandler {
     const participant = this.participants.at(-1) as EnclaveParticipant;
     // Create data channel before negotiation
     participant.dataChannel = participant.rtc.createDataChannel("chat");
-    participant.dataChannel.onopen = () => console.log(`Data channel open for ${userId}`);
-    participant.dataChannel.onmessage = (event) => console.log(`Message from ${userId}:`, event.data);
-    participant.dataChannel.onclose = () => console.log(`Data channel closed for ${userId}`);
-    console.log("registering ices", participant);
+    this.initParticipantDataChannel(participant);
+
     participant.rtc.onicecandidate = (e) => {
-      console.log(`ICE candidate for ${userId}:`, e.candidate);
       if (e.candidate)
         this.socket?.emit("candidate", {
           candidate: {
@@ -85,7 +98,6 @@ class EnclaveRtcConnectionHandler {
     participant.rtc.oniceconnectionstatechange = () => {
       if (participant.rtc.iceConnectionState === "connected" || participant.rtc.iceConnectionState === "completed") {
         // Connection established
-        console.log(`RTC connection established for ${userId}`);
         this.addLogToEnclave(`${userName} has connected to enclave`);
       }
     };
@@ -93,13 +105,7 @@ class EnclaveRtcConnectionHandler {
     participant.rtc.ondatachannel = (event) => {
       participant.dataChannel = event.channel;
       // Set up listeners as above
-      participant.dataChannel.onopen = () => console.log(`Incoming data channel open for ${userId}`);
-      participant.dataChannel.onmessage = (event) => {
-        console.log(`Incoming message from ${userId}:`, event.data);
-      };
-      participant.dataChannel.onclose = () => {
-        console.log(`Incoming data channel closed for ${userId}`);
-      };
+      this.initParticipantDataChannel(participant);
     };
     // participant.rtc.ontrack = (e) => (participant.stream = new MediaStream(e.streams[0]));
     // localStream.value.getTracks().forEach((track: any) => participant.pc?.addTrack(track, localStream.value));
@@ -145,7 +151,6 @@ class EnclaveRtcConnectionHandler {
     // set answer as remote description to the target peerConnection
     const participant = this.findParticipantByUserId(data.userId);
     await participant?.rtc?.setRemoteDescription({ type: "answer", sdp: data.sdp });
-    console.log(participant?.rtc);
   }
 
   async onCandidate(data: any) {
@@ -158,12 +163,15 @@ class EnclaveRtcConnectionHandler {
   onLeft(data: any) {
     // close peer connection with the target-user and remove it from participants
     this.addLogToEnclave(`${data.userName} has disconnected from enclave`);
+    console.log("before remove", this.participants);
 
-    const participant = this.findParticipantByUserId(data.target);
-    const participantIndx = this.findParticipantIndxByUserId(data.target);
+    const participant = this.findParticipantByUserId(data.userId);
+    const participantIndx = this.findParticipantIndxByUserId(data.userId);
     if (participant) {
       participant.rtc?.close();
+      participant.dataChannel?.close();
       this.participants.splice(participantIndx, 1);
+      console.log("after remove", this.participants);
     }
   }
 
@@ -177,6 +185,24 @@ class EnclaveRtcConnectionHandler {
 
   addLogToEnclave(description: string) {
     this.addLog(new EnclaveLog({ description, createdAt: new Date().toISOString() }));
+  }
+
+  sendDispatch(dispatch: Dispatch) {
+    for (const participant of this.participants) {
+      participant.dataChannel?.send(JSON.stringify({ type: "dispatch", data: dispatch }));
+    }
+  }
+
+  clear() {
+    // Close all RTC peer connections
+    for (const participant of this.participants) {
+      participant.rtc?.close();
+      participant.dataChannel?.close();
+    }
+    // Clear participants array
+    this.participants = [];
+    // Disconnect socket
+    this.socket?.disconnect();
   }
 }
 export { EnclaveRtcConnectionHandler };

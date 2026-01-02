@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { fetchEnclaveData, fetchEnclaveDispatches } from "../service/fetch.util";
 import { Dispatch, Enclave, EnclaveLog } from "../service/model";
@@ -12,6 +12,7 @@ import { useMyUser } from "@/features/user";
 import { DataTemplate } from "@/features/shared";
 import { EnclaveRtcConnectionHandler } from "../service/rtc.model";
 import { computedEnclaveMessages } from "../service/utils";
+import ChatHeader from "../components/chat-header";
 
 export default function EnclaveChatScreen() {
   const params = useParams();
@@ -21,17 +22,17 @@ export default function EnclaveChatScreen() {
   const [dispatches, setDispatches] = useState<Dispatch[]>([]);
   const isLogin = useMyUser((state) => state.isLogin);
   const user = useMyUser((state) => state.data);
-  const [rtcHandler, setRtcHandler] = useState<EnclaveRtcConnectionHandler>();
+  const rtcHandler = useRef<EnclaveRtcConnectionHandler | null>(null);
+  const isInit = useRef(false);
+  const onDispatchReceive = (dispatch: Dispatch) => {
+    setDispatches((prev) => [...prev, dispatch]);
+    scrollToBtm();
+  };
 
-  const handleDispatchSent = async (dispatch: Dispatch) => {
-    // Reload dispatches after sending
-    try {
-      const currentList = Array.from(dispatches);
-      currentList.push(dispatch);
-      setDispatches(currentList);
-    } catch (err) {
-      console.error("Error reloading dispatches:", err);
-    }
+  const sendDispatch = (dispatch: Dispatch) => {
+    rtcHandler.current?.sendDispatch(dispatch);
+    setDispatches((prev) => [...prev, dispatch]);
+    scrollToBtm();
   };
 
   const addLog = (log: EnclaveLog) => {
@@ -42,25 +43,48 @@ export default function EnclaveChatScreen() {
         logs: [...prev.logs, log],
       });
     });
+
+    scrollToBtm();
+  };
+
+  const scrollToBtm = () => {
+    setTimeout(() => {
+      const con = document.querySelector("#enclave-messages-con");
+      if (con) con.scrollTop = con.scrollHeight;
+    }, 400);
   };
 
   useEffect(() => {
-    if (isLogin) {
+    if (isLogin && !isInit.current) {
+      isInit.current = true;
       Promise.all([fetchEnclaveData(id), fetchEnclaveDispatches(id)])
         .then(([enclaveRes, dispatchesRes]) => {
           const newEnclave = new Enclave(enclaveRes.data);
           setEnclave(newEnclave);
           const parsedDispatches = dispatchesRes.rows.map((d) => new Dispatch(d));
           setDispatches(parsedDispatches);
-          if (user && newEnclave)
-            setRtcHandler(new EnclaveRtcConnectionHandler({ enclaveId: id, userId: user.id, addLog, myUserId: user.id }));
+
+          // rtc handler
+          if (user && newEnclave) {
+            rtcHandler.current = new EnclaveRtcConnectionHandler({
+              enclaveId: id,
+              userId: user.id,
+              addLog,
+              myUserId: user.id,
+              onDispatchReceive,
+            });
+          }
+
+          scrollToBtm();
         })
         .finally(() => {
           setIsFetched(true);
         });
-
-      // rtc
     }
+    return () => {
+      console.log("onmount", rtcHandler.current);
+      rtcHandler.current?.clear();
+    };
   }, [isLogin]);
 
   return (
@@ -77,13 +101,9 @@ export default function EnclaveChatScreen() {
       loadingTemplate={<EnclaveChatSkeleton />}>
       <div className="flex h-[calc(100vh-64px)] flex-col bg-black">
         {/* Header */}
-        <div className="border-b border-zinc-800 bg-zinc-950/50 px-6 py-4 backdrop-blur-sm">
-          <h1 className="text-lg font-semibold text-white">{"Enclave"}</h1>
-          <p className="text-xs text-zinc-400">ID: {enclave?.id}</p>
-        </div>
-
+        <ChatHeader enclave={enclave!} />
         {/* Dispatches List */}
-        <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
+        <div id="enclave-messages-con" className="flex-1 space-y-4 overflow-y-auto scroll-smooth px-6 py-4">
           {dispatches.length === 0 && enclave?.logs.length === 0 ? (
             <div className="flex h-full items-center justify-center">
               <p className="text-zinc-500">No messages yet. Start the conversation!</p>
@@ -100,7 +120,7 @@ export default function EnclaveChatScreen() {
         </div>
 
         {/* Chat Input */}
-        <ChatInput enclaveId={id} onDispatchSent={handleDispatchSent} />
+        <ChatInput enclaveId={id} sendDispatch={sendDispatch} />
       </div>
     </DataTemplate>
   );

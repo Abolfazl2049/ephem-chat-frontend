@@ -12,7 +12,7 @@ const fetchEnclaveDispatches = (id: string) => {
   return $$fetch<PaginatedResponse>(`/enclave/dispatch/${id}`);
 };
 
-const fetchCreateDispatch = (content: string, enclaveId: string) => {
+const fetchSendDispatch = (content: string, enclaveId: string) => {
   return $$fetch<SuccessResponse>("/enclave/dispatch", {
     method: "POST",
     body: {
@@ -22,4 +22,4 @@ const fetchCreateDispatch = (content: string, enclaveId: string) => {
   });
 };
 
-export { fetchEnclaveData, fetchMyEnclaves, fetchEnclaveDispatches, fetchCreateDispatch };
+export { fetchEnclaveData, fetchMyEnclaves, fetchEnclaveDispatches, fetchSendDispatch };

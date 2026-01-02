@@ -1,16 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { fetchCreateDispatch } from "../service/fetch.util";
+import { fetchSendDispatch } from "../service/fetch.util";
 import { Dispatch } from "../service/model";
 import { useMyUser } from "@/features/user";
 
 interface ChatInputProps {
   enclaveId: string;
-  onDispatchSent?: (dispatch: Dispatch) => void;
+  sendDispatch?: (dispatch: Dispatch) => void;
 }
 
-export default function ChatInput({ enclaveId, onDispatchSent }: ChatInputProps) {
+export default function ChatInput({ enclaveId, sendDispatch }: ChatInputProps) {
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const userName = useMyUser((state) => state.data?.name);
@@ -19,9 +19,11 @@ export default function ChatInput({ enclaveId, onDispatchSent }: ChatInputProps)
 
     setIsLoading(true);
     try {
-      const res = await fetchCreateDispatch(content, enclaveId);
+      fetchSendDispatch(content, enclaveId);
+      sendDispatch?.(
+        new Dispatch({ id: new Date().toISOString(), content, enclaveId, createdAt: new Date().toISOString() }, userName),
+      );
       setContent("");
-      onDispatchSent?.(new Dispatch(res.data, userName));
     } catch (err) {
       console.error("Error sending dispatch:", err);
     } finally {
@@ -32,6 +34,7 @@ export default function ChatInput({ enclaveId, onDispatchSent }: ChatInputProps)
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter") {
       handleSend();
+      e.preventDefault();
     }
   };
 

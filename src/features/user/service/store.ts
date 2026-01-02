@@ -6,6 +6,7 @@ interface UserState {
   isLogin: boolean;
   setUser: (data: Record<string, any>) => void;
   setIsLogin: (isLogin: boolean) => void;
+  onLogout: () => void;
 }
 
 export const useMyUser = create<UserState>((set) => ({
@@ -16,5 +17,8 @@ export const useMyUser = create<UserState>((set) => ({
   },
   setIsLogin(isLogin) {
     set({ isLogin });
+  },
+  onLogout() {
+    set({ isLogin: false, data: null });
   },
 }));
