@@ -41,7 +41,7 @@ export default function ChatInput({ enclaveId, onDispatchSent }: ChatInputProps)
         value={content}
         onChange={(e) => setContent(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Type your message... (Enter to send)"
+        placeholder="Type your dispatch... (Enter to send)"
         className="w-full resize-none rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 pr-14 text-sm text-white placeholder:text-zinc-500 focus:border-green-500/50 focus:ring-1 focus:ring-green-500/30 focus:outline-none"
         rows={3}
       />

@@ -14,6 +14,7 @@ const isValidTokenFormat = (token: string): boolean => {
 
 export default function RestoreTokenScreen() {
   const [token, setToken] = useState("");
+  const [persistToken, setPersistToken] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -29,7 +30,11 @@ export default function RestoreTokenScreen() {
 
     try {
       // Store the token
-      sessionStorage.setItem("token", token);
+      if (persistToken) {
+        localStorage.setItem("token", token);
+      } else {
+        sessionStorage.setItem("token", token);
+      }
       reInitFetch();
       // Redirect to home
       router.replace("/");
@@ -47,6 +52,8 @@ export default function RestoreTokenScreen() {
       tokenError={tokenError}
       loading={loading}
       error={error}
+      persistToken={persistToken}
+      setPersistToken={setPersistToken}
       onSubmit={handleSubmitToken}
     />
   );

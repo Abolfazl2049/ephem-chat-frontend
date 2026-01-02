@@ -12,10 +12,12 @@ interface TokenFormProps {
   tokenError: boolean;
   loading: boolean;
   error: string;
+  persistToken: boolean;
+  setPersistToken: (value: boolean) => void;
   onSubmit: (e: React.FormEvent) => void;
 }
 
-export default function TokenForm({ token, setToken, tokenError, loading, error, onSubmit }: TokenFormProps) {
+export default function TokenForm({ token, setToken, tokenError, loading, error, persistToken, setPersistToken, onSubmit }: TokenFormProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-950 px-4 py-8">
       <div className="w-full max-w-md space-y-6">
@@ -57,6 +59,26 @@ export default function TokenForm({ token, setToken, tokenError, loading, error,
             {loading ? "Restoring Session..." : "Restore Session"}
           </Button>
         </form>
+
+        {/* Persistence Option */}
+        <div className="space-y-3 rounded border border-neutral-800 bg-neutral-900 p-4">
+          <label className="flex cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              checked={persistToken}
+              onChange={(e) => setPersistToken(e.target.checked)}
+              className="h-4 w-4 rounded border-neutral-700 bg-neutral-800 accent-neutral-600"
+            />
+            <span className="text-sm text-neutral-300">
+              Keep me signed in <span className="text-xs text-neutral-500">(saves in browser)</span>
+            </span>
+          </label>
+          <p className="text-xs text-neutral-500">
+            {persistToken
+              ? "Your token will be saved locally. Anyone with access to this device can access your account."
+              : "Your token will be cleared when you close this tab."}
+          </p>
+        </div>
 
         {/* Info Box */}
         <div className="space-y-2 rounded border border-neutral-800 bg-neutral-900 px-4 py-3">

@@ -3,13 +3,15 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { fetchEnclaveData, fetchEnclaveDispatches } from "../service/fetch.util";
-import { Dispatch, Enclave } from "../service/model";
+import { Dispatch, Enclave, EnclaveLog } from "../service/model";
 import DispatchBox from "../components/dispatch-box";
 import ChatInput from "../components/chat-input";
 import EnclaveChatSkeleton from "../components/chat-skeleton";
+import EnclaveLogRecord from "../components/enclave-log-record";
 import { useMyUser } from "@/features/user";
 import { DataTemplate } from "@/features/shared";
 import { EnclaveRtcConnectionHandler } from "../service/rtc.model";
+import { computedEnclaveMessages } from "../service/utils";
 
 export default function EnclaveChatScreen() {
   const params = useParams();
@@ -20,6 +22,7 @@ export default function EnclaveChatScreen() {
   const isLogin = useMyUser((state) => state.isLogin);
   const user = useMyUser((state) => state.data);
   const [rtcHandler, setRtcHandler] = useState<EnclaveRtcConnectionHandler>();
+
   const handleDispatchSent = async (dispatch: Dispatch) => {
     // Reload dispatches after sending
     try {
@@ -31,22 +34,34 @@ export default function EnclaveChatScreen() {
     }
   };
 
+  const addLog = (log: EnclaveLog) => {
+    setEnclave((prev) => {
+      if (!prev) return prev;
+      return new Enclave({
+        ...prev,
+        logs: [...prev.logs, log],
+      });
+    });
+  };
+
   useEffect(() => {
     if (isLogin) {
       Promise.all([fetchEnclaveData(id), fetchEnclaveDispatches(id)])
         .then(([enclaveRes, dispatchesRes]) => {
-          setEnclave(new Enclave(enclaveRes.data));
+          const newEnclave = new Enclave(enclaveRes.data);
+          setEnclave(newEnclave);
           const parsedDispatches = dispatchesRes.rows.map((d) => new Dispatch(d));
           setDispatches(parsedDispatches);
+          if (user && newEnclave)
+            setRtcHandler(new EnclaveRtcConnectionHandler({ enclaveId: id, userId: user.id, addLog, myUserId: user.id }));
         })
         .finally(() => {
           setIsFetched(true);
         });
 
       // rtc
-      if (user) setRtcHandler(new EnclaveRtcConnectionHandler({ enclaveId: id, userId: user.id }));
     }
-  }, [isLogin, id, setRtcHandler]);
+  }, [isLogin]);
 
   return (
     <DataTemplate
@@ -69,12 +84,18 @@ export default function EnclaveChatScreen() {
 
         {/* Dispatches List */}
         <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
-          {dispatches.length === 0 ? (
+          {dispatches.length === 0 && enclave?.logs.length === 0 ? (
             <div className="flex h-full items-center justify-center">
               <p className="text-zinc-500">No messages yet. Start the conversation!</p>
             </div>
           ) : (
-            dispatches.map((dispatch) => <DispatchBox key={dispatch.id} dispatch={dispatch} />)
+            computedEnclaveMessages(enclave?.logs || [], dispatches).map((message) =>
+              message.type === "DISPATCH" ? (
+                <DispatchBox key={message.data.id} dispatch={message.data} />
+              ) : (
+                <EnclaveLogRecord log={message.data} key={message.createdAt} />
+              ),
+            )
           )}
         </div>
 
