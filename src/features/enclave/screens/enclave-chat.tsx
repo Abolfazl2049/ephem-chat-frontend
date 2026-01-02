@@ -113,7 +113,7 @@ export default function EnclaveChatScreen() {
               message.type === "DISPATCH" ? (
                 <DispatchBox key={message.data.id} dispatch={message.data} />
               ) : (
-                <EnclaveLogRecord log={message.data} key={message.createdAt} />
+                <EnclaveLogRecord log={message.data} key={`${message.createdAt}-${message.data.description}`} />
               ),
             )
           )}
