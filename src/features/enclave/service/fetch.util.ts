@@ -8,8 +8,8 @@ const fetchMyEnclaves = async () => {
   return $$fetch<PaginatedResponse>("/enclave/me");
 };
 
-const fetchEnclaveDispatches = (id: string) => {
-  return $$fetch<PaginatedResponse>(`/enclave/dispatch/${id}`);
+const fetchEnclaveDispatches = (id: string, query?: Record<string, string>) => {
+  return $$fetch<PaginatedResponse>(`/enclave/dispatch/${id}`, { query });
 };
 
 const fetchSendDispatch = (content: string, enclaveId: string) => {

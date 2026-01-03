@@ -26,7 +26,7 @@ const computedEnclaveMessages: (logs: EnclaveLog[], dispatches: Dispatch[]) => E
   const messages: EnclaveMessage[] = [];
   for (const log of logs) messages.push({ createdAt: log.createdAt, type: "LOG", data: log });
   for (const dispatch of dispatches) messages.push({ createdAt: dispatch.createdAt, type: "DISPATCH", data: dispatch });
-  messages.sort((a, b) => moment(a.createdAt).diff(moment(b.createdAt)));
+  messages.sort((a, b) => moment(moment(b.createdAt)).diff(a.createdAt));
   return messages;
 };
 

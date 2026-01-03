@@ -9,7 +9,7 @@ import ChatInput from "../components/chat-input";
 import EnclaveChatSkeleton from "../components/chat-skeleton";
 import EnclaveLogRecord from "../components/enclave-log-record";
 import { useMyUser } from "@/features/user";
-import { DataTemplate } from "@/features/shared";
+import { DataTemplate, OnViewEnter } from "@/features/shared";
 import { EnclaveRtcConnectionHandler } from "../service/rtc.model";
 import { computedEnclaveMessages } from "../service/utils";
 import ChatHeader from "../components/chat-header";
@@ -24,6 +24,26 @@ export default function EnclaveChatScreen() {
   const user = useMyUser((state) => state.data);
   const rtcHandler = useRef<EnclaveRtcConnectionHandler | null>(null);
   const isInit = useRef(false);
+  const dispatchPagData = useRef({
+    page: 1,
+    hasNext: false,
+    loading: false,
+  });
+
+  const loadMoreDispatches = async () => {
+    if (dispatchPagData.current.hasNext && !dispatchPagData.current.loading) {
+      dispatchPagData.current.page++;
+      dispatchPagData.current.loading = true;
+      try {
+        const res = await fetchEnclaveDispatches(id, { page: dispatchPagData.current.page.toString() });
+        const loaded = res.rows.map((d) => new Dispatch(d));
+        dispatchPagData.current.hasNext = res.hasNext;
+        setDispatches((prev) => [...loaded, ...prev]);
+      } finally {
+        dispatchPagData.current.loading = false;
+      }
+    }
+  };
   const onDispatchReceive = (dispatch: Dispatch) => {
     setDispatches((prev) => [...prev, dispatch]);
     scrollToBtm();
@@ -62,6 +82,7 @@ export default function EnclaveChatScreen() {
           const newEnclave = new Enclave(enclaveRes.data);
           setEnclave(newEnclave);
           const parsedDispatches = dispatchesRes.rows.map((d) => new Dispatch(d));
+          dispatchPagData.current.hasNext = dispatchesRes.hasNext;
           setDispatches(parsedDispatches);
 
           // rtc handler
@@ -82,7 +103,6 @@ export default function EnclaveChatScreen() {
         });
     }
     return () => {
-      console.log("onmount", rtcHandler.current);
       rtcHandler.current?.clear();
     };
   }, [isLogin]);
@@ -103,19 +123,22 @@ export default function EnclaveChatScreen() {
         {/* Header */}
         <ChatHeader enclave={enclave!} />
         {/* Dispatches List */}
-        <div id="enclave-messages-con" className="flex-1 space-y-4 overflow-y-auto scroll-smooth px-6 py-4">
+        <div id="enclave-messages-con" className="flex flex-1 flex-col-reverse gap-4 overflow-y-auto scroll-smooth px-6 py-4">
           {dispatches.length === 0 && enclave?.logs.length === 0 ? (
             <div className="flex h-full items-center justify-center">
               <p className="text-zinc-500">No messages yet. Start the conversation!</p>
             </div>
           ) : (
-            computedEnclaveMessages(enclave?.logs || [], dispatches).map((message) =>
-              message.type === "DISPATCH" ? (
-                <DispatchBox key={message.data.id} dispatch={message.data} />
-              ) : (
-                <EnclaveLogRecord log={message.data} key={`${message.createdAt}-${message.data.description}`} />
-              ),
-            )
+            <>
+              {computedEnclaveMessages(enclave?.logs || [], dispatches).map((message) =>
+                message.type === "DISPATCH" ? (
+                  <DispatchBox key={message.data.id} dispatch={message.data} />
+                ) : (
+                  <EnclaveLogRecord log={message.data} key={`${message.createdAt}-${message.data.description}`} />
+                ),
+              )}
+              <OnViewEnter onViewEnter={loadMoreDispatches} root="enclave-messages-con" />
+            </>
           )}
         </div>
 
