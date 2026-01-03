@@ -21,7 +21,7 @@ export default function ChatInput({ enclaveId, sendDispatch }: ChatInputProps) {
     try {
       fetchSendDispatch(content, enclaveId);
       sendDispatch?.(
-        new Dispatch({ id: new Date().toISOString(), content, enclaveId, createdAt: new Date().toISOString() }, userName),
+        new Dispatch({ id: crypto.randomUUID(), content, enclaveId, createdAt: new Date().toISOString() }, userName),
       );
       setContent("");
     } catch (err) {
