@@ -151,7 +151,7 @@ export default function SearchingOverlay({ isOpen, onClose }: SearchingOverlayPr
 
           {/* Description */}
           <div className="space-y-2 border-t border-zinc-800 pt-6">
-            <p className="text-xs text-zinc-400">You'll be notified when a match is found. You can cancel anytime.</p>
+            <p className="text-xs text-zinc-400">You&apos;ll be notified when a match is found. You can cancel anytime.</p>
             <p className="text-xs text-zinc-500">Matching with others in real-time...</p>
           </div>
         </div>

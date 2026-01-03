@@ -1,5 +1,5 @@
 "use client";
-
+import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
 import { useMyUser } from "../service/store";
 import { Button } from "@/components/ui/button";
@@ -22,22 +22,33 @@ export default function SidebarActions() {
       data={user}
       isFetched={false}
       loadingTemplate={
-        <div className="space-y-4">
-          <div className="border-t border-zinc-800 pt-4">
-            <div className="h-4 w-8 animate-pulse rounded bg-zinc-400" />
-            <div className="mt-1 h-5 w-24 animate-pulse rounded bg-zinc-300" />
+        <div className="rounded-lg border border-zinc-700 bg-zinc-800/50 p-4 shadow-md">
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <div className="h-8 w-8 animate-pulse rounded-full bg-zinc-400" />
+              <div className="space-y-1">
+                <div className="h-3 w-12 animate-pulse rounded bg-zinc-400" />
+                <div className="h-4 w-20 animate-pulse rounded bg-zinc-300" />
+              </div>
+            </div>
+            <div className="h-10 w-full animate-pulse rounded bg-zinc-700" />
           </div>
-          <div className="h-10 w-full animate-pulse rounded bg-zinc-800" />
         </div>
       }>
-      <div className="space-y-4">
-        <div className="border-t border-zinc-800 pt-4">
-          <p className="text-sm text-zinc-400">User</p>
-          <p className="text-base font-medium text-white">{user?.name || "Guest"}</p>
+      <div className="rounded-lg border border-zinc-700 p-4 shadow-md">
+        <div className="space-y-4">
+          <div className="flex items-center space-x-3">
+            <Icon icon="mdi:account-circle" className="h-8 w-8 text-zinc-400" />
+            <div>
+              <p className="text-xs tracking-wide text-zinc-500 uppercase">User</p>
+              <p className="text-base font-semibold text-white">{user?.name || "Guest"}</p>
+            </div>
+          </div>
+          <Button onClick={handleLogout} variant="destructive" className="flex w-full items-center justify-center">
+            <Icon icon="mdi:logout" className="h-4 w-4 -scale-x-100" />
+            <span>Logout</span>
+          </Button>
         </div>
-        <Button onClick={handleLogout} variant="destructive" className="w-full">
-          Logout
-        </Button>
       </div>
     </DataTemplate>
   );

@@ -4,8 +4,8 @@ import { $$fetch } from "@/libs/ofetch";
 const fetchEnclaveData = (id: string) => {
   return $$fetch<SuccessResponse>(`/enclave/${id}`);
 };
-const fetchMyEnclaves = async () => {
-  return $$fetch<PaginatedResponse>("/enclave/me");
+const fetchMyEnclaves = async (query?: Record<string, string>) => {
+  return $$fetch<PaginatedResponse>("/enclave/me", { query });
 };
 
 const fetchEnclaveDispatches = (id: string, query?: Record<string, string>) => {

@@ -18,8 +18,10 @@ export default function Home() {
         {/* Search Section */}
         <div className="space-y-6">
           <div className="mb-8 space-y-2 text-center">
-            <h2 className="text-2xl font-bold text-white">Find Your Enclave</h2>
-            <p className="text-zinc-400">Connect with others in your secure space</p>
+            <h2 className="text-2xl font-bold text-white">
+              Go Into The <i>Unknown</i>
+            </h2>
+            <p className="text-zinc-400">Connect with absolutely random people and chat with them ! </p>
           </div>
 
           <MatchingTrigger />
