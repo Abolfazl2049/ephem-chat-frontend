@@ -30,7 +30,7 @@ export default function Directory() {
     <div className="p-4">
       <p className="mt-2 mb-2 text-xl font-bold text-white">Enclaves</p>
       <DataTemplate
-        data={[]}
+        data={enclaves}
         isFetched={isFetched}
         loadingTemplate={
           <div className="mt-4 grid grid-cols-1 gap-6 p-4 md:grid-cols-2 lg:grid-cols-3">

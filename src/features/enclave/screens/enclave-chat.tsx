@@ -119,7 +119,7 @@ export default function EnclaveChatScreen() {
         </div>
       }
       loadingTemplate={<EnclaveChatSkeleton />}>
-      <div className="flex h-[calc(100vh-64px)] flex-col bg-black">
+      <div className="flex h-[calc(100vh-69px)] flex-col bg-black">
         {/* Header */}
         <ChatHeader enclave={enclave!} />
         {/* Dispatches List */}
