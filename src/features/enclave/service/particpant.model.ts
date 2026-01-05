@@ -2,14 +2,19 @@ class EnclaveParticipant {
   userId: string;
   rtc: RTCPeerConnection;
   dataChannel: RTCDataChannel | null = null;
+  isConnected = true;
   constructor({ userId }: { userId: string }) {
     this.userId = userId;
     this.rtc = new RTCPeerConnection({
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
-        // { urls: "stun:stun.cloudflare.com:3478" },
-        // { urls: "turn:turn.cloudflare.com:3478" },
-        // Add TURN servers if needed for production
+        { urls: "stun:freestun.net:3478" },
+        { urls: "turn:freestun.net:3478", username: "free", credential: "free" },
+        {
+          urls: "turn:openrelay.metered.ca:80",
+          username: "openrelayproject",
+          credential: "openrelayproject",
+        },
       ],
     });
   }

@@ -1,8 +1,8 @@
 import { io } from "socket.io-client";
 import { EnclaveParticipant } from "./particpant.model";
 import { API_BASE_URL } from "@/features/shared";
-import { Dispatch, Enclave, EnclaveLog } from "./model";
-
+import { Dispatch, EnclaveLog } from "./model";
+type RtcStatus = "connecting" | "connected" | "disconnected";
 class EnclaveRtcConnectionHandler {
   socket: ReturnType<typeof io>;
   participants: EnclaveParticipant[] = [];
@@ -11,18 +11,22 @@ class EnclaveRtcConnectionHandler {
   addLog: (log: EnclaveLog) => void;
   myUserId: string;
   onDispatchReceive: (dispatch: Dispatch) => void;
+  setStatus: (status: RtcStatus) => void;
+
   constructor({
     enclaveId,
     userId,
     addLog,
     myUserId,
     onDispatchReceive,
+    setStatus,
   }: {
     enclaveId: string;
     userId: string;
     addLog: (log: EnclaveLog) => void;
     myUserId: string;
     onDispatchReceive: (dispatch: Dispatch) => void;
+    setStatus: (status: RtcStatus) => void;
   }) {
     this.enclaveId = enclaveId;
     this.userId = userId;
@@ -36,8 +40,13 @@ class EnclaveRtcConnectionHandler {
     });
 
     this.addLog = addLog;
+    this.setStatus = setStatus;
 
     this.socket.on("connect", () => {
+      setTimeout(() => {
+        if (this.connectedParticipants.length === this.participants.length) this.setStatus("connected");
+      }, 1000);
+      setStatus("connected");
       // console.log("Socket connected");
     });
     this.socket.on("setup", () => {
@@ -47,6 +56,7 @@ class EnclaveRtcConnectionHandler {
       console.error("Socket connection error:", err);
     });
     this.socket.on("disconnect", () => {
+      setStatus("disconnected");
       console.log("Socket disconnected");
     });
     this.socket.on("join", (data) => this.onJoin(data));
@@ -94,11 +104,14 @@ class EnclaveRtcConnectionHandler {
           targetUserId: userId,
         });
     };
+
     // Listen for connection state changes
-    participant.rtc.oniceconnectionstatechange = () => {
+    participant.rtc.oniceconnectionstatechange = (ev) => {
       if (participant.rtc.iceConnectionState === "connected" || participant.rtc.iceConnectionState === "completed") {
         // Connection established
         this.addLogToEnclave(`${userName} has connected to enclave`);
+        participant.isConnected = true;
+        if (this.connectedParticipants.length === this.participants.length) this.setStatus("connected");
       }
     };
     // Also handle incoming data channels (if the other peer creates one)
@@ -106,6 +119,9 @@ class EnclaveRtcConnectionHandler {
       participant.dataChannel = event.channel;
       // Set up listeners as above
       this.initParticipantDataChannel(participant);
+    };
+    participant.rtc.onicecandidateerror = (ev) => {
+      this.setStatus("disconnected");
     };
     // participant.rtc.ontrack = (e) => (participant.stream = new MediaStream(e.streams[0]));
     // localStream.value.getTracks().forEach((track: any) => participant.pc?.addTrack(track, localStream.value));
@@ -122,14 +138,19 @@ class EnclaveRtcConnectionHandler {
       console.warn("duplicate participant join received");
       return;
     }
+    this.setStatus("connecting");
     // sent an offer to the joined-user
     this.addLogToEnclave(`${data.userName} is connecting to enclave`);
 
     this.initParticipant({ userId: data.userId, userName: data.userName });
     const participant = this.findParticipantByUserId(data.userId);
-    const offer = await participant?.rtc?.createOffer();
-    this.socket?.emit("offer", { sdp: offer?.sdp, targetUserId: data.userId });
-    await participant?.rtc?.setLocalDescription(offer);
+    try {
+      const offer = await participant?.rtc?.createOffer();
+      this.socket?.emit("offer", { sdp: offer?.sdp, targetUserId: data.userId });
+      await participant?.rtc?.setLocalDescription(offer);
+    } catch {
+      this.setStatus("disconnected");
+    }
   }
 
   async onOffer(data: any) {
@@ -139,31 +160,45 @@ class EnclaveRtcConnectionHandler {
       console.warn("duplicate participant offer received");
       return;
     }
+
+    this.setStatus("connecting");
+
     this.initParticipant({ userId: data.userId, userName: data.userName });
     const participant = this.findParticipantByUserId(data.userId);
     await participant?.rtc?.setRemoteDescription({ type: "offer", sdp: data.sdp });
-    const answer = await participant?.rtc?.createAnswer();
-    this.socket?.emit("answer", { sdp: answer?.sdp, targetUserId: data.userId });
-    await participant?.rtc?.setLocalDescription(answer);
+    try {
+      const answer = await participant?.rtc?.createAnswer();
+      this.socket?.emit("answer", { sdp: answer?.sdp, targetUserId: data.userId });
+      await participant?.rtc?.setLocalDescription(answer);
+    } catch {
+      this.setStatus("disconnected");
+    }
   }
 
   async onAnswer(data: any) {
     // set answer as remote description to the target peerConnection
     const participant = this.findParticipantByUserId(data.userId);
-    await participant?.rtc?.setRemoteDescription({ type: "answer", sdp: data.sdp });
+    try {
+      await participant?.rtc?.setRemoteDescription({ type: "answer", sdp: data.sdp });
+    } catch {
+      this.setStatus("disconnected");
+    }
   }
 
   async onCandidate(data: any) {
     // add candidate to the target peer connection
 
     const participant = this.findParticipantByUserId(data.userId);
-    await participant?.rtc?.addIceCandidate(data.candidate);
+    try {
+      await participant?.rtc?.addIceCandidate(data.candidate);
+    } catch {
+      this.setStatus("disconnected");
+    }
   }
 
   onLeft(data: any) {
     // close peer connection with the target-user and remove it from participants
     this.addLogToEnclave(`${data.userName} has disconnected from enclave`);
-    console.log("before remove", this.participants);
 
     const participant = this.findParticipantByUserId(data.userId);
     const participantIndx = this.findParticipantIndxByUserId(data.userId);
@@ -171,7 +206,7 @@ class EnclaveRtcConnectionHandler {
       participant.rtc?.close();
       participant.dataChannel?.close();
       this.participants.splice(participantIndx, 1);
-      console.log("after remove", this.participants);
+      if (this.connectedParticipants.length === this.participants.length) this.setStatus("connected");
     }
   }
 
@@ -204,5 +239,10 @@ class EnclaveRtcConnectionHandler {
     // Disconnect socket
     this.socket?.disconnect();
   }
+
+  get connectedParticipants() {
+    return this.participants.filter(({ isConnected }) => isConnected);
+  }
 }
 export { EnclaveRtcConnectionHandler };
+export type { RtcStatus };

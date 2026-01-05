@@ -10,7 +10,7 @@ import EnclaveChatSkeleton from "../components/chat-skeleton";
 import EnclaveLogRecord from "../components/enclave-log-record";
 import { useMyUser } from "@/features/user";
 import { DataTemplate, OnViewEnter } from "@/features/shared";
-import { EnclaveRtcConnectionHandler } from "../service/rtc.model";
+import { EnclaveRtcConnectionHandler, RtcStatus } from "../service/rtc.model";
 import { computedEnclaveMessages } from "../service/utils";
 import ChatHeader from "../components/chat-header";
 
@@ -24,6 +24,7 @@ export default function EnclaveChatScreen() {
   const user = useMyUser((state) => state.data);
   const rtcHandler = useRef<EnclaveRtcConnectionHandler | null>(null);
   const isInit = useRef(false);
+  const [rtcStatus, setRtcStatus] = useState<RtcStatus>("connecting");
   const dispatchPagData = useRef({
     page: 1,
     hasNext: false,
@@ -93,6 +94,9 @@ export default function EnclaveChatScreen() {
               addLog,
               myUserId: user.id,
               onDispatchReceive,
+              setStatus: (status) => {
+                setRtcStatus(status);
+              },
             });
           }
 
@@ -119,7 +123,7 @@ export default function EnclaveChatScreen() {
         </div>
       }
       loadingTemplate={<EnclaveChatSkeleton />}>
-      <div className="flex h-[calc(100vh-69px)] flex-col bg-black">
+      <div className="flex h-[calc(100dvh-69px)] flex-col bg-black">
         {/* Header */}
         <ChatHeader enclave={enclave!} />
         {/* Dispatches List */}
@@ -143,7 +147,7 @@ export default function EnclaveChatScreen() {
         </div>
 
         {/* Chat Input */}
-        <ChatInput enclaveId={id} sendDispatch={sendDispatch} />
+        <ChatInput enclaveId={id} sendDispatch={sendDispatch} rtcStatus={rtcStatus} />
       </div>
     </DataTemplate>
   );
