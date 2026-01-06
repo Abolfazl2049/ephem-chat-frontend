@@ -1,6 +1,6 @@
 # EphemChat Frontend
 
-A Next.js-based frontend application for ephem chat.
+A Next.js-based frontend application for Ephem Chat.
 
 ## Quick Start
 
