@@ -112,6 +112,8 @@ class EnclaveRtcConnectionHandler {
         this.addLogToEnclave(`${userName} has connected to enclave`);
         participant.isConnected = true;
         if (this.connectedParticipants.length === this.participants.length) this.setStatus("connected");
+      } else if (participant.rtc.iceConnectionState === "disconnected" || participant.rtc.iceConnectionState === "failed") {
+        this.setDisconnected(ev);
       }
     };
     // Also handle incoming data channels (if the other peer creates one)
@@ -121,7 +123,7 @@ class EnclaveRtcConnectionHandler {
       this.initParticipantDataChannel(participant);
     };
     participant.rtc.onicecandidateerror = (ev) => {
-      this.setStatus("disconnected");
+      // this.setDisconnected(ev);
     };
     // participant.rtc.ontrack = (e) => (participant.stream = new MediaStream(e.streams[0]));
     // localStream.value.getTracks().forEach((track: any) => participant.pc?.addTrack(track, localStream.value));
@@ -148,8 +150,8 @@ class EnclaveRtcConnectionHandler {
       const offer = await participant?.rtc?.createOffer();
       this.socket?.emit("offer", { sdp: offer?.sdp, targetUserId: data.userId });
       await participant?.rtc?.setLocalDescription(offer);
-    } catch {
-      this.setStatus("disconnected");
+    } catch (err) {
+      this.setDisconnected(err);
     }
   }
 
@@ -170,8 +172,8 @@ class EnclaveRtcConnectionHandler {
       const answer = await participant?.rtc?.createAnswer();
       this.socket?.emit("answer", { sdp: answer?.sdp, targetUserId: data.userId });
       await participant?.rtc?.setLocalDescription(answer);
-    } catch {
-      this.setStatus("disconnected");
+    } catch (err) {
+      this.setDisconnected(err);
     }
   }
 
@@ -180,8 +182,8 @@ class EnclaveRtcConnectionHandler {
     const participant = this.findParticipantByUserId(data.userId);
     try {
       await participant?.rtc?.setRemoteDescription({ type: "answer", sdp: data.sdp });
-    } catch {
-      this.setStatus("disconnected");
+    } catch (err) {
+      this.setDisconnected(err);
     }
   }
 
@@ -191,8 +193,8 @@ class EnclaveRtcConnectionHandler {
     const participant = this.findParticipantByUserId(data.userId);
     try {
       await participant?.rtc?.addIceCandidate(data.candidate);
-    } catch {
-      this.setStatus("disconnected");
+    } catch (err) {
+      this.setDisconnected(err);
     }
   }
 
@@ -238,6 +240,11 @@ class EnclaveRtcConnectionHandler {
     this.participants = [];
     // Disconnect socket
     this.socket?.disconnect();
+  }
+
+  setDisconnected(err: any) {
+    console.error("rtc  disconnected", err);
+    this.setStatus("disconnected");
   }
 
   get connectedParticipants() {
